@@ -1,0 +1,21 @@
+#root {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 2rem;
+    text-align: center;
+}
+
+.app-canvas {
+    background: #fff;
+}
+
+button {
+    margin: 20px 0;
+}
+
+.chart-container {
+    margin: 20px 0;
+    height: 300px;
+    background: #fff;
+    border-radius: 5px;
+}
