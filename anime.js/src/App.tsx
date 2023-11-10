@@ -235,6 +235,9 @@ function App() {
     const [state, _setState] = useState(getInitialState());
 
     useEffect(() => {
+        if (timelineRef.current) {
+            timelineRef.current.pause();
+        }
         timelineRef.current = animate(state);
     }, [state]);
 
@@ -257,6 +260,7 @@ function App() {
     }, [canvasRef.current]);
 
     const onStart = useCallback(() => {
+        timelineRef.current.pause();
         timelineRef.current.seek(0);
         timelineRef.current.play();
     }, [timelineRef.current]);
