@@ -12,8 +12,8 @@ let getInitialState = () => {
             height: 400 - 20,
             style: "rgba(220,220,220,1)",
         },
-        text: {
-            offset: { x: 100, y: 30 },
+        assets: [{
+            offset: { x: 60, y: 30 },
             lines: [
                 {
                     x: -100,
@@ -40,7 +40,36 @@ let getInitialState = () => {
                     opacity: 0.1,
                 }
             ]
-        }
+        }, {
+            offset: { x: 420, y: 30 },
+            lines: [
+                {
+                    x: 100,
+                    y: 50,
+                    width: 300,
+                    height: 40,
+                    style: "rgba(100,100,100,1)",
+                    opacity: 0.1,
+                },
+                {
+                    x: 100,
+                    y: 100,
+                    width: 300,
+                    height: 40,
+                    style: "rgba(100,100,100,1)",
+                    opacity: 0.1,
+                },
+                {
+                    x: 100,
+                    y: 150,
+                    width: 200,
+                    height: 40,
+                    style: "rgba(100,100,100,1)",
+                    opacity: 0.1,
+                }
+                ]
+            }
+        ]
     };
 };
 
@@ -71,8 +100,12 @@ const renderState = (
         }
 ) => {
     drawRectangle({ ctx, ...state.background });
-    ctx.translate(state.text.offset.x, state.text.offset.y);
-    state.text.lines.map((line: any) => drawRectangle({ ctx, ...line }));
+    for (let i in state.assets) {
+        ctx.save();
+        ctx.translate(state.assets[i].offset.x, state.assets[i].offset.y);
+        state.assets[i].lines.map((line: any) => drawRectangle({ ctx, ...line }));
+        ctx.restore();
+    }
 };
 
 
@@ -97,35 +130,69 @@ const animate = (state: any) => {
         autoplay: true,
     });
 
-    for (let i = 0; i < state.text.lines.length; i++) {
-        timeline
-            .add({
-                targets: state.text.lines[i],
-                x: 10,
-                opacity: '1.0',
-                easing: 'easeInOutQuart',
-                round: 1,
-                duration: 1000/3
-            });
+    // -------------------------------------- Animate Asset A
+
+    let assetAIntros = [];
+
+    for (let j = 0; j < state.assets[0].lines.length; j++) {
+        assetAIntros.push({
+            targets: state.assets[0].lines[j],
+            x: 10,
+            opacity: '1.0',
+            easing: 'easeInOutQuart',
+            duration: 1000 / 3
+        });
     }
 
-    //timeline.add({
-    //    duration: 2000
-    //})
+    assetAIntros.map(a => timeline.add(a));
 
-    for (let i = 0; i < state.text.lines.length; i++) {
-        timeline
-            .add({
-                targets: state.text.lines[i],
-                x: -100,
-                opacity: '0.0',
-                easing: 'easeInOutQuart',
-                round: 1,
-                direction: 'reverse',
-                duration: 1000/3
-            });
+    // Hold for 2 seconds
+    // (I don't know how to add a delay without pretending to animate something)
+    timeline
+        .add({
+            targets: state.assets[0].lines[0],
+            x: 10,
+            opacity: '1.0',
+            easing: 'easeInOutQuart',
+            duration: 2000
+        });
+
+    assetAIntros.reverse().map(a => timeline.add({ direction: 'reverse', ...a, x: -100, opacity: 0 }))
+
+    timeline
+        .add({
+            targets: state.assets[0].lines[0],
+            duration: 1000
+        });
+
+    // -------------------------------------- Animate Asset B
+
+    let assetBIntros = [];
+
+    for (let j = 0; j < state.assets[1].lines.length; j++) {
+        assetBIntros.push({
+            targets: state.assets[1].lines[j],
+            x: 0,
+            opacity: 1.0,
+            easing: 'easeInOutQuart',
+            duration: 1000 / 3,
+        });
     }
 
+    assetBIntros.reverse().map((a, index) => timeline.add(a, '+=0'));
+
+    // Hold for 2 seconds
+    // (I don't know how to add a delay without pretending to animate something)
+    timeline
+        .add({
+            targets: state.assets[1].lines[0],
+            x: 0,
+            opacity: '1.0',
+            easing: 'easeInOutQuart',
+            duration: 2000,
+        });
+
+    assetBIntros.map(a => timeline.add({ ...a, direction: 'reverse', x: 100, opacity: 0 }))
 
     return timeline;
 };
