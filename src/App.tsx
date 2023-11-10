@@ -1,5 +1,6 @@
 import { MutableRefObject, useCallback, useEffect, useRef, useState } from 'react';
 import { Tween, update } from '@tweenjs/tween.js';
+import { ResponsiveBump } from '@nivo/bump';
 import * as TWEEN from '@tweenjs/tween.js';
 import './App.css';
 
@@ -95,6 +96,7 @@ const drawCanvas = ({
 const animate = (state: any): Tween => {
     let firstTween = null;
     let previousTween = null;
+    let tweens: Tween[] = [];
 
     for (let i in state.text.lines) {
         const tween = new Tween(state.text.lines[i]);
@@ -105,21 +107,53 @@ const animate = (state: any): Tween => {
         } else {
             previousTween.chain(tween);
         }
+
         previousTween = tween;
+        tweens.push(tween);
     }
 
-    return firstTween;
+    return tweens;
 };
+
+
+const bumpChart = (data) => {
+    return (
+        <div className="chart-container">
+            <ResponsiveBump
+                data={data}
+                colors={{ scheme: 'spectral' }}
+                lineWidth={3}
+                activeLineWidth={6}
+                inactiveLineWidth={3}
+                inactiveOpacity={0.15}
+                pointSize={10}
+                activePointSize={16}
+                inactivePointSize={0}
+                pointColor={{ theme: 'background' }}
+                pointBorderWidth={3}
+                activePointBorderWidth={3}
+                pointBorderColor={{ from: 'serie.color' }}
+                axisTop={null}
+                axisBottom={null}
+                axisLeft={null}
+                margin={{ top: 40, right: 100, bottom: 40, left: 60 }}
+                axisRight={null}
+            />
+        </div >
+    );
+}
 
 function App() {
     const canvasRef: MutableRefObject<HTMLCanvasElement | null> = useRef(null);
     const contextRef: MutableRefObject<CanvasRenderingContext2D | null> = useRef(null);
-    const tweenRef: MutableRefObject<Tween|null> = useRef(null);
+    const tweensRef: MutableRefObject<Tween|null> = useRef(null);
+    const [data, setData]: any = useState([]);
+
     const [time, _setTime] = useState(0.5);
     const [state, _setState] = useState(getInitialState());
 
     useEffect(() => {
-        tweenRef.current = animate(state);
+        tweensRef.current = animate(state);
     }, [state]);
 
     useEffect(() => {
@@ -141,11 +175,11 @@ function App() {
     }, [canvasRef.current]);
 
     const onStart = useCallback(() => {
-        if (!tweenRef.current) {
+        if (!tweensRef.current) {
             return;
         }
-        tweenRef.current.start();
-    }, [tweenRef.current]);
+        tweensRef.current[0].start();
+    }, [tweensRef.current]);
 
     // Setup requestAnimationFrame
     useEffect(() => {
@@ -174,15 +208,42 @@ function App() {
         };
     }, [state]);
 
+    useEffect(() => {
+        let series = [];
+        for (let i = 0; i < state.text.lines.length; i++) {
+            let tween = tweensRef.current[i];
+
+            let tweenData = [];
+
+            for (let time = 0; time < 3; time += 0.1) {
+                tween.update(time);
+                tweenData.push({
+                    "x": time,
+                    "y": tween._object.x + i * 100,
+                });
+            }
+
+            series.push({
+                "id": `Tween ${i}`,
+                "data": tweenData
+            })
+        }
+
+        setData(series);
+    }, [state, tweensRef.current])
+
+
+
     return (
         <>
-            <p className="">
-                Welcome to hackanton city.
-            </p>
-            <canvas ref={canvasRef} className="app-canvas" /><br/>
-            <button onClick={onStart}>Play</button>
+        <p className="">
+            Welcome to hackanton city.
+        </p>
+        <canvas ref={canvasRef} className="app-canvas" /><br />
+        <button onClick={onStart}>Play</button>
+            {bumpChart(data)}
         </>
-    )
+        )
 }
 
 export default App;

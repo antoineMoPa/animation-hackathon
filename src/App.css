@@ -8,3 +8,14 @@
 .app-canvas {
     background: #fff;
 }
+
+button {
+    margin: 20px 0;
+}
+
+.chart-container {
+    margin: 20px 0;
+    height: 300px;
+    background: #fff;
+    border-radius: 5px;
+}
