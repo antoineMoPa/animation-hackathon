@@ -21,6 +21,7 @@ let getInitialState = () => {
                     width: 400,
                     height: 40,
                     style: "rgba(100,100,100,1)",
+                    opacity: 0.1,
                 },
                 {
                     x: -100,
@@ -28,6 +29,7 @@ let getInitialState = () => {
                     width: 400,
                     height: 40,
                     style: "rgba(100,100,100,1)",
+                    opacity: 0.1,
                 },
                 {
                     x: -100,
@@ -35,6 +37,7 @@ let getInitialState = () => {
                     width: 300,
                     height: 40,
                     style: "rgba(100,100,100,1)",
+                    opacity: 0.1,
                 }
             ]
         }
@@ -42,7 +45,7 @@ let getInitialState = () => {
 };
 
 const drawRectangle = (
-    { ctx, x, y, width, height, style = "rgba(200,200,200,1)" }:
+    { ctx, x, y, width, height, style = "rgba(200,200,200,1)", opacity }:
         {
             x: number,
             y: number,
@@ -50,10 +53,14 @@ const drawRectangle = (
             height: number,
             ctx: CanvasRenderingContext2D,
             style: string,
+            opacity: number,
         }
 ) => {
+    ctx.save();
+    ctx.globalAlpha = opacity;
     ctx.fillStyle = style;
     ctx.fillRect(x, y, width, height);
+    ctx.restore();
 };
 
 const renderState = (
@@ -86,10 +93,22 @@ const drawCanvas = ({
 }
 
 const animate = (state: any): Tween => {
-    const tween: Tween = new Tween(state.text.lines[0]);
-    tween.to({ x: 10 }, 1000);
+    let firstTween = null;
+    let previousTween = null;
 
-    return tween;
+    for (let i in state.text.lines) {
+        const tween = new Tween(state.text.lines[i]);
+        tween.to({ x: 10, opacity: 1 }, 300);
+
+        if (!firstTween) {
+            firstTween = tween;
+        } else {
+            previousTween.chain(tween);
+        }
+        previousTween = tween;
+    }
+
+    return firstTween;
 };
 
 function App() {
@@ -160,7 +179,7 @@ function App() {
             <p className="">
                 Welcome to hackanton city.
             </p>
-            <canvas ref={canvasRef} className="app-canvas" />
+            <canvas ref={canvasRef} className="app-canvas" /><br/>
             <button onClick={onStart}>Play</button>
         </>
     )
